@@ -16,6 +16,9 @@ type UserService struct {
 }
 
 func (service *UserService) Register(username, password string) (*model.User, error) {
+	if username == "" || password == "" {
+		return nil, errors.New("用户或密码不能为空")
+	}
 	if existingUser, _ := service.Repo.FindUserByUsername(username); existingUser != nil {
 		return nil, errors.New("用户已存在")
 	}
