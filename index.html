@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待办事项</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 登录表单 -->
+        <div id="loginForm" class="auth-form">
+            <h2>登录</h2>
+            <form onsubmit="return handleLogin(event)">
+                <input type="text" id="loginUsername" placeholder="用户名" required>
+                <input type="password" id="loginPassword" placeholder="密码" required>
+                <button type="submit">登录</button>
+            </form>
+            <p>还没有账号？ <a href="#" onclick="showRegister()">注册</a></p>
+        </div>
+
+        <!-- 注册表单 -->
+        <div id="registerForm" class="auth-form" style="display: none;">
+            <h2>注册</h2>
+            <form onsubmit="return handleRegister(event)">
+                <input type="text" id="registerUsername" placeholder="用户名" required>
+                <input type="password" id="registerPassword" placeholder="密码" required>
+                <button type="submit">注册</button>
+            </form>
+            <p>已有账号？ <a href="#" onclick="showLogin()">登录</a></p>
+        </div>
+
+        <!-- 待办事项列表 -->
+        <div id="todoApp" class="todo-app" style="display: none;">
+            <header>
+                <h2>我的待办事项</h2>
+                <button onclick="handleLogout()" class="logout-btn">退出登录</button>
+            </header>
+
+            <div class="add-todo">
+                <form onsubmit="return handleAddTodo(event)">
+                    <div class="input-group">
+                        <input type="text" id="todoTitle" placeholder="新建待办事项" required>
+                        <button type="submit">添加</button>
+                    </div>
+                    <div class="todo-options">
+                        <input type="date" id="todoDueDate">
+                        <select id="todoPriority">
+                            <option value="low">低优先级</option>
+                            <option value="medium" selected>中优先级</option>
+                            <option value="high">高优先级</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索待办事项">
+                <button onclick="handleSearch()">搜索</button>
+            </div>
+
+            <div id="todoList" class="todo-list"></div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html> 

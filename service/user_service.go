@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/YXRRXY/todo-app/model"
+	"github.com/YXRRXY/todo-app/repository"
 	"github.com/golang-jwt/jwt"
-	"github.com/yxrxy/todo-app/model"
-	"github.com/yxrxy/todo-app/repository"
 )
 
 type UserService struct {

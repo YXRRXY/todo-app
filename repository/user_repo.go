@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/yxrxy/todo-app/model"
+	"github.com/YXRRXY/todo-app/model"
 	"gorm.io/gorm"
 )
 

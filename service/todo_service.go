@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/yxrxy/todo-app/model"
-	"github.com/yxrxy/todo-app/repository"
+	"github.com/YXRRXY/todo-app/model"
+	"github.com/YXRRXY/todo-app/repository"
 )
 
 type TodoService struct {

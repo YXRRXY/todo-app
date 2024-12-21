@@ -3,8 +3,8 @@ package controller
 import (
 	"context"
 
+	"github.com/YXRRXY/todo-app/service"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/yxrxy/todo-app/service"
 )
 
 type UserController struct {
