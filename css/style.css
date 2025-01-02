@@ -19,67 +19,106 @@ body {
 /* 认证表单样式 */
 .auth-form {
     background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     max-width: 400px;
-    margin: 50px auto;
+    margin: 80px auto;
 }
 
 .auth-form h2 {
-    margin-bottom: 20px;
+    color: #333;
     text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.auth-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
 }
 
 .auth-form input {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
 }
 
 .auth-form button {
     width: 100%;
-    padding: 10px;
-    background: #4CAF50;
+    padding: 12px;
+    background-color: #4CAF50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 0.5rem;
 }
 
 .auth-form button:hover {
-    background: #45a049;
+    background-color: #45a049;
 }
 
 .auth-form p {
     text-align: center;
-    margin-top: 15px;
+    margin-top: 1.5rem;
+    color: #666;
 }
 
 .auth-form a {
     color: #4CAF50;
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
 }
 
-/* 待办事项应用样式 */
-.todo-app header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+.auth-form a:hover {
+    color: #45a049;
+    text-decoration: underline;
 }
 
-.logout-btn {
-    padding: 8px 16px;
-    background: #ff4444;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+/* 添加动画效果 */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
+.auth-form {
+    animation: slideIn 0.5s ease;
+}
+
+/* 响应式设计优化 */
+@media (max-width: 480px) {
+    .auth-form {
+        margin: 40px 20px;
+        padding: 2rem;
+    }
+
+    .auth-form h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* 待办事项表单样式 */
 .add-todo {
     background: white;
     padding: 20px;
@@ -89,63 +128,246 @@ body {
 }
 
 .input-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.input-group input {
-    flex: 1;
+.input-group input,
+.input-group textarea {
+    width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 1rem;
 }
 
-.todo-options {
+.input-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.time-group {
     display: flex;
-    gap: 10px;
+    gap: 20px;
+    margin-bottom: 15px;
 }
 
-.todo-options input,
-.todo-options select {
+.time-input {
+    flex: 1;
+}
+
+.time-input label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.time-input input {
+    width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
-.search-bar {
+.time-input input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #333;
+    background-color: white;
+    transition: border-color 0.3s ease;
+}
+
+.time-input input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* 待办事项列表样式 */
+.todo-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.todo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.todo-title {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.todo-content {
+    margin: 10px 0;
+    color: #666;
+}
+
+.todo-time {
+    font-size: 0.9em;
+    color: #888;
+}
+
+.todo-actions {
+    margin-top: 10px;
     display: flex;
     gap: 10px;
+}
+
+/* 分页样式 */
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 按钮通用样式 */
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.status-complete {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+/* 批量操作按钮样式 */
+.batch-actions {
     margin-bottom: 20px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 10px;
+}
+
+/* 复选框样式 */
+.todo-checkbox {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    background-color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* 待办事项选中状态 */
+.todo-item.selected {
+    border: 2px solid #4CAF50;
+}
+
+/* 状态过滤样式 */
+.status-filter {
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.status-filter select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: white;
+}
+
+/* 搜索栏样式 */
+.search-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-bar input {
     flex: 1;
-    padding: 10px;
+    padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    margin-right: 10px;
+    font-size: 1rem;
 }
 
-.todo-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.todo-item {
-    background: white;
-    padding: 15px;
-    border-radius: 4px;
+/* 头部样式 */
+header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
-.todo-item.completed {
-    opacity: 0.7;
+header h2 {
+    color: #333;
 }
 
-.todo-item.completed span {
-    text-decoration: line-through;
+.logout-btn {
+    background-color: #6c757d;
+}
+
+.logout-btn:hover {
+    background-color: #5a6268;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    .time-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .batch-actions {
+        flex-wrap: wrap;
+    }
+
+    .todo-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .todo-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 } 

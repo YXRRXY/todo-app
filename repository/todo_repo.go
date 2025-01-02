@@ -13,38 +13,85 @@ func (repo *TodoRepo) CreateTodo(todo *model.Todo) error {
 	return repo.DB.Create(todo).Error
 }
 
-func (repo *TodoRepo) GetTodos(page, pageSize int) ([]model.Todo, int64, error) {
+func (repo *TodoRepo) GetTodos(userID uint, page, pageSize int, status *int) ([]model.Todo, int64, error) {
 	var todos []model.Todo
 	var total int64
+	query := repo.DB.Model(&model.Todo{}).Where("user_id = ?", userID)
 
-	//获取总条数
-	if err := repo.DB.Model(&model.Todo{}).Count(&total).Error; err != nil {
+	if status != nil {
+		query = query.Where("status = ?", *status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	//分页
-	if err := repo.DB.Offset((page - 1) * pageSize).Limit(pageSize).Find(&todos).Error; err != nil {
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&todos).Error; err != nil {
 		return nil, 0, err
 	}
 
 	return todos, total, nil
 }
 
-func (repo *TodoRepo) UpdateTodoStatus(todoID uint, status int) error {
-	return repo.DB.Model(&model.Todo{}).Where("id = ?", todoID).Update("status", status).Error
+func (repo *TodoRepo) UpdateTodoStatus(userID uint, todoID uint, status int) error {
+	return repo.DB.Model(&model.Todo{}).
+		Where("id = ? AND user_id = ?", todoID, userID).
+		Update("status", status).Error
 }
 
-func (repo *TodoRepo) SearchTodos(keyword string, page, pageSize int) ([]model.Todo, int64, error) {
+func (repo *TodoRepo) SearchTodos(userID uint, keyword string, page, pageSize int, status *int) ([]model.Todo, int64, error) {
 	var todos []model.Todo
 	var total int64
-	if err := repo.DB.Model(&model.Todo{}).
-		Where("title LIKE ? OR content LIKE ?", "%"+keyword+"%", "%"+keyword+"%").
-		Count(&total).Error; err != nil {
+
+	query := repo.DB.Model(&model.Todo{}).
+		Where("user_id = ?", userID).
+		Where("title LIKE ? OR content LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+
+	if status != nil {
+		query = query.Where("status = ?", *status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if err := repo.DB.Model(&model.Todo{}).
-		Where("title LIKE ? OR content LIKE ?", "%"+keyword+"%", "%"+keyword+"%").
-		Offset((page - 1) * pageSize).Limit(pageSize).Find(&todos).Error; err != nil {
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&todos).Error; err != nil {
 		return nil, 0, err
 	}
+
 	return todos, total, nil
+}
+
+func (repo *TodoRepo) BatchUpdateStatus(userID uint, status int, currentStatus *int, ids []uint) (int64, error) {
+	query := repo.DB.Model(&model.Todo{}).Where("user_id = ?", userID)
+
+	if len(ids) > 0 {
+		query = query.Where("id IN ?", ids)
+	}
+
+	if currentStatus != nil {
+		query = query.Where("status = ?", *currentStatus)
+	}
+
+	result := query.Update("status", status)
+	return result.RowsAffected, result.Error
+}
+
+func (repo *TodoRepo) DeleteTodo(userID uint, todoID uint) error {
+	return repo.DB.Where("id = ? AND user_id = ?", todoID, userID).Delete(&model.Todo{}).Error
+}
+
+func (repo *TodoRepo) BatchDelete(userID uint, status *int, ids []uint) (int64, error) {
+	query := repo.DB.Where("user_id = ?", userID)
+
+	if len(ids) > 0 {
+		query = query.Where("id IN ?", ids)
+	}
+
+	if status != nil {
+		query = query.Where("status = ?", *status)
+	}
+
+	result := query.Delete(&model.Todo{})
+	return result.RowsAffected, result.Error
 }

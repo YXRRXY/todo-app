@@ -2,32 +2,59 @@ package main
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"github.com/YXRRXY/todo-app/config"
 	"github.com/YXRRXY/todo-app/controller"
+	"github.com/YXRRXY/todo-app/model"
 	"github.com/YXRRXY/todo-app/repository"
 	"github.com/YXRRXY/todo-app/service"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/dgrijalva/jwt-go"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-// CORS 中间件
 func corsMiddleware() app.HandlerFunc {
 	return func(c context.Context, ctx *app.RequestContext) {
 		ctx.Header("Access-Control-Allow-Origin", "*")
 		ctx.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		ctx.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 
-		// 处理预检请求
 		if string(ctx.Method()) == "OPTIONS" {
 			ctx.AbortWithStatus(consts.StatusNoContent)
 			return
 		}
 
 		ctx.Next(c)
+	}
+}
+
+func authMiddleware(jwtSecret string) app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		auth := string(c.GetHeader("Authorization"))
+		if !strings.HasPrefix(auth, "Bearer ") {
+			c.AbortWithStatusJSON(401, map[string]string{"error": "未授权访问"})
+			return
+		}
+
+		tokenString := auth[7:]
+		token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			c.AbortWithStatusJSON(401, map[string]string{"error": "无效的token"})
+			return
+		}
+
+		claims := token.Claims.(*jwt.StandardClaims)
+		userID, _ := strconv.ParseUint(claims.Id, 10, 64)
+		c.Set("user_id", uint(userID))
+		c.Next(ctx)
 	}
 }
 
@@ -48,16 +75,26 @@ func main() {
 
 	h := server.Default()
 
-	// 添加 CORS 中间件
 	h.Use(corsMiddleware())
+
+	auth := h.Group("/", authMiddleware(config.GlobalConfig.JwtSecret))
+	{
+		auth.POST("/todo/add", todoController.AddTodo)
+		auth.GET("/todo/list", todoController.GetTodos)
+		auth.GET("/todo/search", todoController.SearchTodos)
+		auth.PUT("/todo/:id/status/:status", todoController.UpdateTodoStatus)
+		auth.PUT("/todo/status/batch", todoController.BatchUpdateStatus)
+		auth.DELETE("/todo/batch", todoController.BatchDelete)
+		auth.DELETE("/todo/:id", todoController.DeleteTodo)
+	}
 
 	h.POST("/user/register", userController.Register)
 	h.POST("/user/login", userController.Login)
 
-	h.POST("/todo/add", todoController.AddTodo)
-	h.GET("/todo/list", todoController.GetTodos)
-	h.GET("/todo/search", todoController.SearchTodos)
-	h.PUT("/todo/:id/status/:status", todoController.UpdateTodoStatus)
+	err = db.AutoMigrate(&model.Todo{})
+	if err != nil {
+		panic("failed to migrate database: " + err.Error())
+	}
 
 	h.Spin()
 

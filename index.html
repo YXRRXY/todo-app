@@ -37,28 +37,58 @@
                 <button onclick="handleLogout()" class="logout-btn">退出登录</button>
             </header>
 
+            <!-- 添加待办事项表单 -->
             <div class="add-todo">
                 <form onsubmit="return handleAddTodo(event)">
                     <div class="input-group">
-                        <input type="text" id="todoTitle" placeholder="新建待办事项" required>
-                        <button type="submit">添加</button>
+                        <input type="text" id="todoTitle" placeholder="标题" required>
                     </div>
-                    <div class="todo-options">
-                        <input type="date" id="todoDueDate">
-                        <select id="todoPriority">
-                            <option value="low">低优先级</option>
-                            <option value="medium" selected>中优先级</option>
-                            <option value="high">高优先级</option>
-                        </select>
+                    <div class="input-group">
+                        <textarea id="todoContent" placeholder="内容描述" required></textarea>
                     </div>
+                    <div class="time-group">
+                        <div class="time-input">
+                            <label>开始时间：</label>
+                            <input type="datetime-local" 
+                                   id="startTime" 
+                                   pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" 
+                                   placeholder="YYYY-MM-DD HH:mm"
+                                   required>
+                        </div>
+                        <div class="time-input">
+                            <label>结束时间：</label>
+                            <input type="datetime-local" 
+                                   id="endTime" 
+                                   pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}" 
+                                   placeholder="YYYY-MM-DD HH:mm"
+                                   required>
+                        </div>
+                    </div>
+                    <button type="submit">添加待办事项</button>
                 </form>
             </div>
 
+            <!-- 搜索栏 -->
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="搜索待办事项">
                 <button onclick="handleSearch()">搜索</button>
             </div>
 
+            <!-- 分页控制 -->
+            <div class="pagination">
+                <select id="pageSize" onchange="handlePageSizeChange()">
+                    <option value="10">10条/页</option>
+                    <option value="20">20条/页</option>
+                    <option value="50">50条/页</option>
+                </select>
+                <div class="page-controls">
+                    <button onclick="changePage(-1)">上一页</button>
+                    <span id="currentPage">第 1 页</span>
+                    <button onclick="changePage(1)">下一页</button>
+                </div>
+            </div>
+
+            <!-- 待办事项列表 -->
             <div id="todoList" class="todo-list"></div>
         </div>
     </div>

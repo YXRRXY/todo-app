@@ -12,8 +12,9 @@ type TodoService struct {
 	Repo *repository.TodoRepo
 }
 
-func (s *TodoService) AddTodo(content, title string, startTime, endTime int64) (*model.Todo, error) {
+func (s *TodoService) AddTodo(userID uint, title, content string, startTime, endTime int64) (*model.Todo, error) {
 	todo := &model.Todo{
+		UserID:    userID,
 		Title:     title,
 		Content:   content,
 		Status:    0,
@@ -30,17 +31,32 @@ func (s *TodoService) AddTodo(content, title string, startTime, endTime int64) (
 	return todo, nil
 }
 
-func (s *TodoService) GetTodos(page, pageSize int) ([]model.Todo, int64, error) {
-	return s.Repo.GetTodos(page, pageSize)
+func (s *TodoService) GetTodos(userID uint, page, pageSize int, status *int) ([]model.Todo, int64, error) {
+	return s.Repo.GetTodos(userID, page, pageSize, status)
 }
 
-func (s *TodoService) UpdateTodoStatus(todoID uint, status int) error {
+func (s *TodoService) UpdateTodoStatus(userID uint, todoID uint, status int) error {
 	if status != 0 && status != 1 {
-		return errors.New("无效的状态")
+		return errors.New("无效的状态值")
 	}
-	return s.Repo.UpdateTodoStatus(todoID, status)
+	return s.Repo.UpdateTodoStatus(userID, todoID, status)
 }
 
-func (s *TodoService) SearchTodos(keyword string, page, pageSize int) ([]model.Todo, int64, error) {
-	return s.Repo.SearchTodos(keyword, page, pageSize)
+func (s *TodoService) SearchTodos(userID uint, keyword string, page, pageSize int, status *int) ([]model.Todo, int64, error) {
+	return s.Repo.SearchTodos(userID, keyword, page, pageSize, status)
+}
+
+func (s *TodoService) BatchUpdateStatus(userID uint, status int, currentStatus *int, ids []uint) (int64, error) {
+	if status != 0 && status != 1 {
+		return 0, errors.New("无效的状态值")
+	}
+	return s.Repo.BatchUpdateStatus(userID, status, currentStatus, ids)
+}
+
+func (s *TodoService) DeleteTodo(userID uint, todoID uint) error {
+	return s.Repo.DeleteTodo(userID, todoID)
+}
+
+func (s *TodoService) BatchDelete(userID uint, status *int, ids []uint) (int64, error) {
+	return s.Repo.BatchDelete(userID, status, ids)
 }

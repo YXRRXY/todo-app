@@ -13,6 +13,8 @@ type TodoController struct {
 }
 
 func (tc TodoController) AddTodo(ctx context.Context, c *app.RequestContext) {
+	userID := c.GetUint("user_id")
+
 	var todoRequest struct {
 		Title     string `json:"title"`
 		Content   string `json:"content"`
@@ -24,7 +26,7 @@ func (tc TodoController) AddTodo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	todo, err := tc.TodoService.AddTodo(todoRequest.Title, todoRequest.Content, todoRequest.StartTime, todoRequest.EndTime)
+	todo, err := tc.TodoService.AddTodo(userID, todoRequest.Title, todoRequest.Content, todoRequest.StartTime, todoRequest.EndTime)
 	if err != nil {
 		c.JSON(500, map[string]string{"error": err.Error()})
 		return
@@ -34,6 +36,7 @@ func (tc TodoController) AddTodo(ctx context.Context, c *app.RequestContext) {
 }
 
 func (tc *TodoController) GetTodos(ctx context.Context, c *app.RequestContext) {
+	userID := c.GetUint("user_id")
 	page := 1
 	pageSize := 10
 
@@ -48,7 +51,14 @@ func (tc *TodoController) GetTodos(ctx context.Context, c *app.RequestContext) {
 		}
 	}
 
-	todos, total, err := tc.TodoService.GetTodos(page, pageSize)
+	var status *int
+	if statusStr, ok := c.GetQuery("status"); ok {
+		if statusInt, err := strconv.Atoi(statusStr); err == nil {
+			status = &statusInt
+		}
+	}
+
+	todos, total, err := tc.TodoService.GetTodos(userID, page, pageSize, status)
 	if err != nil {
 		c.JSON(500, map[string]string{"error": err.Error()})
 		return
@@ -68,6 +78,15 @@ func (tc *TodoController) GetTodos(ctx context.Context, c *app.RequestContext) {
 }
 
 func (tc *TodoController) SearchTodos(ctx context.Context, c *app.RequestContext) {
+	userID := c.GetUint("user_id")
+
+	var status *int
+	if statusStr, ok := c.GetQuery("status"); ok {
+		if statusInt, err := strconv.Atoi(statusStr); err == nil {
+			status = &statusInt
+		}
+	}
+
 	keyword := c.DefaultQuery("keyword", "")
 	page := 1
 	pageSize := 10
@@ -83,7 +102,7 @@ func (tc *TodoController) SearchTodos(ctx context.Context, c *app.RequestContext
 		}
 	}
 
-	todos, total, err := tc.TodoService.SearchTodos(keyword, page, pageSize)
+	todos, total, err := tc.TodoService.SearchTodos(userID, keyword, page, pageSize, status)
 	if err != nil {
 		c.JSON(500, map[string]string{"error": err.Error()})
 		return
@@ -103,10 +122,11 @@ func (tc *TodoController) SearchTodos(ctx context.Context, c *app.RequestContext
 }
 
 func (tc *TodoController) UpdateTodoStatus(ctx context.Context, c *app.RequestContext) {
+	userID := c.GetUint("user_id")
 	todoIDStr := c.Param("id")
 	statusStr := c.Param("status")
 
-	todoID, err := strconv.ParseInt(todoIDStr, 10, 64)
+	todoID, err := strconv.ParseUint(todoIDStr, 10, 64)
 	if err != nil {
 		c.JSON(400, map[string]string{"error": "无效的代办事项ID"})
 		return
@@ -116,11 +136,87 @@ func (tc *TodoController) UpdateTodoStatus(ctx context.Context, c *app.RequestCo
 		c.JSON(400, map[string]string{"error": "无效的状态值"})
 		return
 	}
-	err = tc.TodoService.UpdateTodoStatus(uint(todoID), int(status))
+	err = tc.TodoService.UpdateTodoStatus(userID, uint(todoID), int(status))
 	if err != nil {
 		c.JSON(500, map[string]string{"error": err.Error()})
 		return
 	}
 
 	c.JSON(200, map[string]string{"msg": "更新成功"})
+}
+
+func (tc *TodoController) BatchUpdateStatus(ctx context.Context, c *app.RequestContext) {
+	var req struct {
+		Status        int    `json:"status"`
+		CurrentStatus *int   `json:"current_status,omitempty"`
+		IDs           []uint `json:"ids,omitempty"`
+	}
+
+	if err := c.BindAndValidate(&req); err != nil {
+		c.JSON(400, map[string]string{"error": "无效的请求参数"})
+		return
+	}
+
+	userID := c.GetUint("user_id")
+
+	count, err := tc.TodoService.BatchUpdateStatus(userID, req.Status, req.CurrentStatus, req.IDs)
+	if err != nil {
+		c.JSON(500, map[string]string{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, map[string]interface{}{
+		"status": 200,
+		"msg":    "更新成功",
+		"data": map[string]int64{
+			"updated_count": count,
+		},
+	})
+}
+
+func (tc *TodoController) BatchDelete(ctx context.Context, c *app.RequestContext) {
+	var req struct {
+		Status *int   `json:"status,omitempty"`
+		IDs    []uint `json:"ids,omitempty"`
+	}
+
+	if err := c.BindAndValidate(&req); err != nil {
+		c.JSON(400, map[string]string{"error": "无效的请求参数"})
+		return
+	}
+
+	userID := c.GetUint("user_id")
+
+	count, err := tc.TodoService.BatchDelete(userID, req.Status, req.IDs)
+	if err != nil {
+		c.JSON(500, map[string]string{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, map[string]interface{}{
+		"status": 200,
+		"msg":    "删除成功",
+		"data": map[string]int64{
+			"deleted_count": count,
+		},
+	})
+}
+
+func (tc *TodoController) DeleteTodo(ctx context.Context, c *app.RequestContext) {
+	userID := c.GetUint("user_id")
+	todoIDStr := c.Param("id")
+
+	todoID, err := strconv.ParseUint(todoIDStr, 10, 64)
+	if err != nil {
+		c.JSON(400, map[string]string{"error": "无效的待办事项ID"})
+		return
+	}
+
+	err = tc.TodoService.DeleteTodo(userID, uint(todoID))
+	if err != nil {
+		c.JSON(500, map[string]string{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, map[string]string{"msg": "删除成功"})
 }
