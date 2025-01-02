@@ -54,7 +54,7 @@ todo-app/
 - MySQL (数据库)
 - JWT (认证)
 
-### 前端
+### 前端(此部分是为了了解前后端是如何对接的，用cursor生成的)
 - HTML5
 - CSS3
 - JavaScript (原生)
