@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YXRRXY/todo-app/config"
 	"github.com/YXRRXY/todo-app/controller"
@@ -58,12 +61,62 @@ func authMiddleware(jwtSecret string) app.HandlerFunc {
 	}
 }
 
-func main() {
-	dsn := "root:zth20041017@tcp(localhost:3306)/todo-app?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func initDatabase() (*gorm.DB, error) {
+	dbRootDSN := fmt.Sprintf("%s:%s@tcp(%s:3306)/",
+		config.GlobalConfig.DBUser,
+		config.GlobalConfig.DBPassword,
+		config.GlobalConfig.DBHost)
+
+	db, err := sql.Open("mysql", dbRootDSN)
 	if err != nil {
-		panic("连接数据库失败")
+		return nil, fmt.Errorf("连接MySQL失败: %v", err)
 	}
+	defer db.Close()
+
+	// 创建数据库
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`", config.GlobalConfig.DBName))
+	if err != nil {
+		return nil, fmt.Errorf("创建数据库失败: %v", err)
+	}
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		config.GlobalConfig.DBUser,
+		config.GlobalConfig.DBPassword,
+		config.GlobalConfig.DBHost,
+		config.GlobalConfig.DBName)
+
+	gormDB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("连接数据库失败: %v", err)
+	}
+
+	// 自动迁移表结构
+	err = gormDB.AutoMigrate(
+		&model.User{},
+		&model.Todo{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("数据库迁移失败: %v", err)
+	}
+
+	return gormDB, nil
+}
+
+func main() {
+	db, err := initDatabase()
+	if err != nil {
+		panic(err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	// 设置连接池参数
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
 	userRepo := &repository.UserRepo{DB: db}
 	todoRepo := &repository.TodoRepo{DB: db}
 
@@ -90,11 +143,6 @@ func main() {
 
 	h.POST("/user/register", userController.Register)
 	h.POST("/user/login", userController.Login)
-
-	err = db.AutoMigrate(&model.Todo{})
-	if err != nil {
-		panic("failed to migrate database: " + err.Error())
-	}
 
 	h.Spin()
 

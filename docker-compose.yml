@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: zth20041017
+      MYSQL_DATABASE: todo-app
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - todo-net
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8888:8888"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=zth20041017
+      - DB_NAME=todo-app
+    networks:
+      - todo-net
+
+volumes:
+  mysql_data:
+
+networks:
+  todo-net:
+    driver: bridge 

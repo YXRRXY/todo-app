@@ -65,8 +65,8 @@ todo-app/
 
 ## 使用说明
 
-1. 运行main.go
-2. 点击index.html进行访问
+1. 在当前目录下运行docker-compose up -d
+2. 点击index.html即可访问
 
 ## 注意事项
 
